@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<body>
+        <button id="btn">Start new game</button>
+        <p id='new'>hi!</p>
+    <canvas id="mycan"  style="border:1px solid;background-color: black"></canvas>
+    <script>
+        
+var ctx = document.getElementById('mycan').getContext('2d');
+var can = document.getElementById('mycan');
+can.width = innerWidth;
+can.height = innerHeight;
+var cannon = new Image(60,20);
+var canon;
+var bullets = [];
+var targets = [];
+
+document.getElementById("new").innerHTML= "hehe";
+//*************new game**********************************//
+function startGame(){
+    canonn = new canon();
+    cannon.src = 'images.jpg';
+    newGame.start();
+}
+
+const sound = new Audio();
+function playSound(){
+    sound.src = '/home/praveen/Downloads/BBOUNCE+2.mp3';
+    sound.play();
+}
+var newGame = {
+    start : function(){
+        this.interval = setInterval(updateGame,10);
+        this.time=0;
+        this.score = 0;
+    },
+    scores : function(){
+        ctx.font = "30px monospace";
+        ctx.fillStyle = "white";
+        ctx.fillText("Score: "+this.score,300,40);
+    }
+    
+}
+
+/*function reset(){
+    canonn = undefined;
+    bullets = [];
+    targets = [];
+}*/
+
+
+
+var right = false,
+    left = false;
+
+document.addEventListener("keydown",function(event){
+    if(event.key==='a'){
+        right = true;
+        
+    }
+    else if(event.key ==='d'){
+        left = true;
+    }
+})
+addEventListener("keyup",function(event){
+    if(event.key==='a'){
+        right = false;
+    }
+    else if(event.key ==='d'){
+        left = false  ;
+    }
+})
+colors = [
+    'blue',
+    'red',
+    'green',
+    'yellow',
+    'pink',
+    'orange'
+]
+var n1 = Math.floor(6*Math.random());
+var n2 = Math.floor(6*Math.random());
+function canon(){
+    this.x=600;
+    this.y = innerHeight-60;
+    this.draw = function(){
+        if(this.x<0){
+            this.x=innerWidth;
+        }
+        else if(this.x>innerWidth){
+            this.x=0;
+        }
+        ctx.fillStyle = 'grey';
+        ctx.fillRect(this.x,this.y,20,60);
+        
+        
+    }
+
+
+}
+
+function circle(x,y,rad){
+    this.start=true;
+    this.radius = rad;
+    this.y1 = y;
+    this.y = y;
+    this.dx = 3*Math.random()+2;
+    this.dy = 2*Math.random()+1;
+    
+    this.x = x;
+    this.color = colors[Math.floor(6*Math.random())];
+    this.gravity=0.2;
+    
+   this.move = function(){
+       if(this.start){
+        this.x += this.dx;
+           if(this.x>this.radius){
+               this.start=false;
+
+           }
+       }
+       else{
+           
+        if(this.y+this.radius>=innerHeight){
+            playSound();
+            this.dy = -this.dy+this.gravity;
+            
+            
+        }
+        if(this.x+this.radius>=innerWidth||this.x-this.radius<=0){
+            this.dx=-this.dx;
+            playSound();
+
+        }
+        this.y +=this.dy;
+        this.x += this.dx;
+        this.dy +=this.gravity;
+    }}
+
+
+    this.collided = function(otherobj){
+        var x1 = this.x;
+        var y1 = this.y;
+        var x2 = otherobj.x;
+        var y2 = otherobj.y;
+        var rad = this.radius+(otherobj.radius);
+        var distance = Math.sqrt(Math.pow(this.x-(otherobj.x),2)+Math.pow(this.y-(otherobj.y),2));
+        var collide = true;
+        if(rad<distance){
+            collide=false;
+        }
+        return collide;
+
+    }
+    this.value = Math.floor(1.3*rad);
+     this.update = function(){
+        ctx.closePath();
+        ctx.font = "20px monospace";
+        ctx.fillStyle = "black";
+        ctx.fillText(this.value,this.x-10,this.y+5);
+     }
+    this.draw = function(){  
+        
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.radius,0,2*Math.PI,true);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        
+      } 
+}
+function updateGame(){
+    for(i=0;i<targets.length;i++){
+        if(targets[i].x+0.8*targets[i].radius>canonn.x && targets[i].x-0.8*targets[i].radius<canonn.x+20 && targets[i].y+0.8*targets[i].radius>canonn.y+5){
+               
+            return;
+        }
+    }
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    var rand = 60*Math.random()+20;
+    
+    newGame.time += 1;
+    if(right){
+        canonn.x -= 5;
+    }
+    if(left){
+        canonn.x += 5;
+    }
+
+    if(newGame.time%5==0 || newGame.time==1){
+        bullets.push(new circle(canonn.x+10,canonn.y-1,10));
+    }
+    if(targets.length<3 || newGame.time%1500==0){
+        targets.push(new circle(-rand,150*Math.random()+50,rand))
+    }
+    for(i=0;i<bullets.length;i++){
+        for(j=0;j<targets.length;j++){
+            if(bullets[i].collided(targets[j])){
+                bullets.splice(i,1);
+                newGame.score ++;
+                
+                targets[j].value--;
+                if(targets[j].value<=0){
+                    
+                    targets.splice(j,1);
+                }
+            
+            }
+        }
+    }
+    for(i=0;i<bullets.length;i++){
+        if(bullets[i].y>60){
+        bullets[i].y -= 5;
+        bullets[i].draw();
+        }
+        else{
+            bullets.splice(i,1);
+        }
+    }
+    for(i=0;i<targets.length;i++){
+        targets[i].move();
+        targets[i].draw();
+        targets[i].update();
+    }
+    canonn.draw();  
+    newGame.scores(); 
+}
+
+startGame();
+
+    </script>
+    
+</body>
+</html>
